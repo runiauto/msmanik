@@ -36,6 +36,8 @@
   </div>
 
   <div class="flex gap-2 mb-4">
+    <input id="date" type="date" class="p-2 border rounded" />
+    <input id="client" type="text" placeholder="Client Name" class="flex-1 p-2 border rounded" />
     <input id="desc" type="text" placeholder="Description" class="flex-1 p-2 border rounded" />
     <input id="amount" type="number" placeholder="Amount" class="w-32 p-2 border rounded" />
   </div>
@@ -51,17 +53,22 @@
   </div>
 
   <div class="mb-4">
-    <input id="search" type="text" placeholder="Filter by Description..." oninput="renderTransactions()" class="w-full p-2 border rounded" />
+    <input id="search" type="text" placeholder="Filter by Client Name..." oninput="renderTransactions()" class="w-full p-2 border rounded" />
   </div>
 
+  <ul id="transactions" class="space-y-2 mb-6"></ul>
+
+  <h2 class="text-lg font-semibold mb-2">📊 Overall Analytics</h2>
   <canvas id="chart" class="mb-6"></canvas>
 
-  <ul id="transactions" class="space-y-2"></ul>
+  <h2 class="text-lg font-semibold mb-2">👥 Client-wise Analytics</h2>
+  <canvas id="clientChart"></canvas>
 </div>
 
 <script>
 let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 let chart;
+let clientChart;
 
 function login() {
   const user = document.getElementById('username').value;
@@ -80,18 +87,22 @@ function saveToLocal() {
 }
 
 function addTransaction(type) {
+  const date = document.getElementById('date').value;
+  const client = document.getElementById('client').value;
   const desc = document.getElementById('desc').value;
   const amount = parseFloat(document.getElementById('amount').value);
 
-  if (!desc || !amount) {
-    alert('Please enter description and amount');
+  if (!date || !client || !desc || isNaN(amount)) {
+    alert('Please enter all fields correctly');
     return;
   }
 
-  transactions.push({ desc, amount, type });
+  transactions.push({ date, client, desc, amount, type });
   saveToLocal();
   renderTransactions();
 
+  document.getElementById('date').value = '';
+  document.getElementById('client').value = '';
   document.getElementById('desc').value = '';
   document.getElementById('amount').value = '';
 }
@@ -105,7 +116,7 @@ function renderTransactions() {
   let cashOut = 0;
 
   transactions.forEach((t, index) => {
-    if (search && !t.desc.toLowerCase().includes(search)) return;
+    if (search && !t.client.toLowerCase().includes(search)) return;
     if (t.type === 'in') cashIn += t.amount;
     else cashOut += t.amount;
 
@@ -114,7 +125,7 @@ function renderTransactions() {
 
     li.innerHTML = `
       <div>
-        <p class="font-medium">${t.desc}</p>
+        <p class="font-medium">${t.date} | ${t.client} - ${t.desc}</p>
         <p class="text-sm ${t.type==='in'?'text-green-600':'text-red-600'}">
           ${t.type==='in'?'+':'-'}${t.amount}
         </p>
@@ -133,6 +144,7 @@ function renderTransactions() {
   document.getElementById('balance').innerText = cashIn - cashOut;
 
   updateChart(cashIn, cashOut);
+  updateClientChart();
 }
 
 function updateChart(cashIn, cashOut) {
@@ -149,14 +161,58 @@ function updateChart(cashIn, cashOut) {
   });
 }
 
+function updateClientChart() {
+  const ctx = document.getElementById('clientChart');
+
+  if (clientChart) clientChart.destroy();
+
+  const clientIncome = {};
+  const clientExpense = {};
+
+  transactions.forEach(t => {
+    if (!clientIncome[t.client]) {
+      clientIncome[t.client] = 0;
+      clientExpense[t.client] = 0;
+    }
+
+    if (t.type === 'in') clientIncome[t.client] += t.amount;
+    else clientExpense[t.client] += t.amount;
+  });
+
+  const labels = Object.keys(clientIncome);
+  const incomeData = labels.map(c => clientIncome[c]);
+  const expenseData = labels.map(c => clientExpense[c]);
+
+  clientChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Income', data: incomeData },
+        { label: 'Expense', data: expenseData }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' }
+      }
+    }
+  });
+}
+
 function editTransaction(index) {
   const t = transactions[index];
 
+  const newDate = prompt('Edit date (YYYY-MM-DD):', t.date);
+  const newClient = prompt('Edit client:', t.client);
   const newDesc = prompt('Edit description:', t.desc);
   const newAmount = parseFloat(prompt('Edit amount:', t.amount));
 
-  if (!newDesc || !newAmount) return;
+  if (!newDate || !newClient || !newDesc || isNaN(newAmount)) return;
 
+  transactions[index].date = newDate;
+  transactions[index].client = newClient;
   transactions[index].desc = newDesc;
   transactions[index].amount = newAmount;
 
@@ -171,12 +227,15 @@ function deleteTransaction(index) {
 }
 
 function exportCSV() {
-  let csv = 'Description,Amount,Type\n';
+  let rows = [['Date','Client','Description','Amount','Type']];
+
   transactions.forEach(t => {
-    csv += `${t.desc},${t.amount},${t.type}\n`;
+    rows.push([t.date, t.client, t.desc, t.amount, t.type]);
   });
 
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const csv = rows.map(e => e.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = 'transactions.csv';
@@ -185,8 +244,9 @@ function exportCSV() {
 
 function exportPDF() {
   let content = 'Transactions:\n\n';
+
   transactions.forEach(t => {
-    content += `${t.desc} - ${t.type} - ${t.amount}\n`;
+    content += `${t.date} | ${t.client} - ${t.desc} - ${t.type} - ${t.amount}\n`;
   });
 
   const blob = new Blob([content], { type: 'application/pdf' });
