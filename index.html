@@ -7,62 +7,72 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gradient-to-r from-blue-400 to-cyan-300 min-h-screen p-6">
+<body class="bg-gradient-to-r from-blue-400 to-cyan-300 min-h-screen p-3 md:p-6">
 
 <!-- LOGIN SCREEN -->
-<div id="loginPage" class="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-6 text-center">
-  <h2 class="text-xl font-bold mb-4">🔐 Login</h2>
+<div id="loginPage" class="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-4 md:p-6 text-center">
+  <h2 class="text-lg md:text-xl font-bold mb-4">🔐 Login</h2>
   <input id="username" type="text" placeholder="Enter username" class="w-full p-2 border rounded mb-4" />
   <button onclick="login()" class="w-full bg-blue-500 text-white p-2 rounded">Login</button>
 </div>
 
 <!-- MAIN APP -->
-<div id="app" class="hidden max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-6">
-  <h1 class="text-2xl font-bold mb-4 text-center">💰 Personal Accounting</h1>
+<div id="app" class="hidden max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-3 md:p-6">
+  <h1 class="text-xl md:text-2xl font-bold mb-4 text-center">💰 Personal Accounting</h1>
 
-  <div class="grid grid-cols-3 gap-4 text-center mb-6">
-    <div class="bg-green-100 p-4 rounded-xl">
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 text-center mb-6">
+    <div class="bg-green-100 p-3 md:p-4 rounded-xl">
       <p class="text-sm">Cash In</p>
-      <h2 id="cashIn" class="text-xl font-bold">0</h2>
+      <h2 id="cashIn" class="text-lg md:text-xl font-bold">0</h2>
     </div>
-    <div class="bg-red-100 p-4 rounded-xl">
+    <div class="bg-red-100 p-3 md:p-4 rounded-xl">
       <p class="text-sm">Cash Out</p>
-      <h2 id="cashOut" class="text-xl font-bold">0</h2>
+      <h2 id="cashOut" class="text-lg md:text-xl font-bold">0</h2>
     </div>
-    <div class="bg-blue-100 p-4 rounded-xl">
+    <div class="bg-blue-100 p-3 md:p-4 rounded-xl">
       <p class="text-sm">Balance</p>
-      <h2 id="balance" class="text-xl font-bold">0</h2>
+      <h2 id="balance" class="text-lg md:text-xl font-bold">0</h2>
     </div>
   </div>
 
-  <div class="flex gap-2 mb-4">
-    <input id="date" type="date" class="p-2 border rounded" />
-    <input id="client" type="text" placeholder="Client Name" class="flex-1 p-2 border rounded" />
-    <input id="desc" type="text" placeholder="Description" class="flex-1 p-2 border rounded" />
-    <input id="amount" type="number" placeholder="Amount" class="w-32 p-2 border rounded" />
+  <!-- Inputs (stack on mobile) -->
+  <div class="flex flex-col md:flex-row gap-2 mb-4">
+    <input id="date" type="date" class="p-2 border rounded w-full md:w-auto" />
+    <input id="client" type="text" placeholder="Client Name" class="p-2 border rounded w-full" />
+    <input id="desc" type="text" placeholder="Description" class="p-2 border rounded w-full" />
+    <input id="amount" type="number" placeholder="Amount" class="p-2 border rounded w-full md:w-32" />
   </div>
 
-  <div class="flex gap-2 mb-4">
-    <button onclick="addTransaction('in')" class="flex-1 bg-green-500 text-white p-2 rounded">Add Cash In</button>
-    <button onclick="addTransaction('out')" class="flex-1 bg-red-500 text-white p-2 rounded">Add Cash Out</button>
+  <!-- Buttons -->
+  <div class="flex flex-col sm:flex-row gap-2 mb-4">
+    <button onclick="addTransaction('in')" class="w-full bg-green-500 text-white p-2 rounded">Add Cash In</button>
+    <button onclick="addTransaction('out')" class="w-full bg-red-500 text-white p-2 rounded">Add Cash Out</button>
   </div>
 
-  <div class="flex gap-2 mb-4">
-    <button onclick="exportCSV()" class="bg-gray-700 text-white px-3 py-2 rounded">Export Excel (CSV)</button>
-    <button onclick="exportPDF()" class="bg-gray-900 text-white px-3 py-2 rounded">Export PDF</button>
+  <div class="flex flex-col sm:flex-row gap-2 mb-4">
+    <button onclick="exportCSV()" class="w-full bg-gray-700 text-white px-3 py-2 rounded">Export Excel (CSV)</button>
+    <button onclick="exportPDF()" class="w-full bg-gray-900 text-white px-3 py-2 rounded">Export PDF</button>
   </div>
 
+  <!-- Search -->
   <div class="mb-4">
     <input id="search" type="text" placeholder="Filter by Client Name..." oninput="renderTransactions()" class="w-full p-2 border rounded" />
   </div>
 
+  <!-- Transactions -->
   <ul id="transactions" class="space-y-2 mb-6"></ul>
 
-  <h2 class="text-lg font-semibold mb-2">📊 Overall Analytics</h2>
-  <canvas id="chart" class="mb-6"></canvas>
+  <!-- Charts -->
+  <h2 class="text-base md:text-lg font-semibold mb-2">📊 Overall Analytics</h2>
+  <div class="w-full overflow-x-auto">
+    <canvas id="chart" class="mb-6"></canvas>
+  </div>
 
-  <h2 class="text-lg font-semibold mb-2">👥 Client-wise Analytics</h2>
-  <canvas id="clientChart"></canvas>
+  <h2 class="text-base md:text-lg font-semibold mb-2">👥 Client-wise Analytics</h2>
+  <div class="w-full overflow-x-auto">
+    <canvas id="clientChart"></canvas>
+  </div>
 </div>
 
 <script>
@@ -121,18 +131,18 @@ function renderTransactions() {
     else cashOut += t.amount;
 
     const li = document.createElement('li');
-    li.className = "flex justify-between items-center p-2 rounded bg-gray-100";
+    li.className = "flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 rounded bg-gray-100";
 
     li.innerHTML = `
       <div>
-        <p class="font-medium">${t.date} | ${t.client} - ${t.desc}</p>
+        <p class="font-medium text-sm md:text-base">${t.date} | ${t.client} - ${t.desc}</p>
         <p class="text-sm ${t.type==='in'?'text-green-600':'text-red-600'}">
           ${t.type==='in'?'+':'-'}${t.amount}
         </p>
       </div>
       <div class="flex gap-2">
-        <button onclick="editTransaction(${index})" class="bg-yellow-400 px-2 py-1 rounded text-sm">Edit</button>
-        <button onclick="deleteTransaction(${index})" class="bg-red-500 text-white px-2 py-1 rounded text-sm">Delete</button>
+        <button onclick="editTransaction(${index})" class="bg-yellow-400 px-2 py-1 rounded text-xs md:text-sm">Edit</button>
+        <button onclick="deleteTransaction(${index})" class="bg-red-500 text-white px-2 py-1 rounded text-xs md:text-sm">Delete</button>
       </div>
     `;
 
@@ -149,9 +159,7 @@ function renderTransactions() {
 
 function updateChart(cashIn, cashOut) {
   const ctx = document.getElementById('chart');
-
   if (chart) chart.destroy();
-
   chart = new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -163,7 +171,6 @@ function updateChart(cashIn, cashOut) {
 
 function updateClientChart() {
   const ctx = document.getElementById('clientChart');
-
   if (clientChart) clientChart.destroy();
 
   const clientIncome = {};
@@ -174,7 +181,6 @@ function updateClientChart() {
       clientIncome[t.client] = 0;
       clientExpense[t.client] = 0;
     }
-
     if (t.type === 'in') clientIncome[t.client] += t.amount;
     else clientExpense[t.client] += t.amount;
   });
@@ -194,16 +200,13 @@ function updateClientChart() {
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { position: 'top' }
-      }
+      plugins: { legend: { position: 'top' } }
     }
   });
 }
 
 function editTransaction(index) {
   const t = transactions[index];
-
   const newDate = prompt('Edit date (YYYY-MM-DD):', t.date);
   const newClient = prompt('Edit client:', t.client);
   const newDesc = prompt('Edit description:', t.desc);
@@ -228,13 +231,8 @@ function deleteTransaction(index) {
 
 function exportCSV() {
   let rows = [['Date','Client','Description','Amount','Type']];
-
-  transactions.forEach(t => {
-    rows.push([t.date, t.client, t.desc, t.amount, t.type]);
-  });
-
+  transactions.forEach(t => rows.push([t.date, t.client, t.desc, t.amount, t.type]));
   const csv = rows.map(e => e.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
-
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -244,11 +242,9 @@ function exportCSV() {
 
 function exportPDF() {
   let content = 'Transactions:\n\n';
-
   transactions.forEach(t => {
     content += `${t.date} | ${t.client} - ${t.desc} - ${t.type} - ${t.amount}\n`;
   });
-
   const blob = new Blob([content], { type: 'application/pdf' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
